@@ -3,7 +3,9 @@
 - 레포: https://github.com/skku-channel-hackathon-2026/team7
 - 채널톡 앱: `6aab941d9b243d81f896`
 - 앱 관리: https://channel.works/-/developers/apps/6aab941d9b243d81f896/general
-- 서버·전용 D1·자동 배포: 두 번째 Cloudflare 무료 계정 연결 대기 중입니다.
+- 서버: https://skku-team7.skku-hackathon-2026-b.workers.dev
+- 전용 D1: `skku-team7` (`f46ac198-7243-4129-8018-c4f90443e6d5`)
+- 자동 배포: main 새 커밋을 운영자 배포 시스템이 감지해 배포합니다.
 - 전용 채널 및 앱 설치: 준비 중입니다.
 
 [개발·DB 마이그레이션 안내](HACKATHON.ko.md)를 먼저 확인하세요.

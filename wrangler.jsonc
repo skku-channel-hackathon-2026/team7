@@ -1,5 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
+  "account_id": "dfae196a200b2b4517521071e46bdebf",
   "name": "skku-team7",
   "main": "cloudflare/worker.mjs",
   "compatibility_date": "2026-09-17",
@@ -17,7 +18,7 @@
     {
       "binding": "DB",
       "database_name": "skku-team7",
-      "database_id": "00000000-0000-0000-0000-000000000000",
+      "database_id": "f46ac198-7243-4129-8018-c4f90443e6d5",
       "migrations_dir": "cloudflare/migrations",
     },
   ],

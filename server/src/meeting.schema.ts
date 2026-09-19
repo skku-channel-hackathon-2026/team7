@@ -1,9 +1,11 @@
 import type { AppDatabase } from "./database.js";
 
-// The meeting tables from cloudflare/migrations/0002–0005, applied by the Worker
-// itself so the remote D1 needs no manual migration. Every statement is
-// idempotent: tables and indexes use IF NOT EXISTS, and ADD COLUMN on a column
-// that already exists is skipped. Keep this in sync with new migrations.
+// The meeting schema, applied by the Worker itself on first use. It covers
+// cloudflare/migrations/0002–0005 and is the only place that adds the v2
+// columns (0003), because SQLite has no "ADD COLUMN IF NOT EXISTS" and the
+// automatic remote migrations must stay safe to run after this code. Every
+// statement is idempotent: tables and indexes use IF NOT EXISTS, and ADD
+// COLUMN on a column that already exists is skipped.
 const MEETING_SCHEMA: string[] = [
   // 0002_meeting.sql
   `

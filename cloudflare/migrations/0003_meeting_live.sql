@@ -1,31 +1,12 @@
 -- Meeting v2: schools, polls in the group chat, server-driven random live
 -- events, anonymous like votes, catfish (메기) members and department rank.
--- Additive only; existing rows keep working through column defaults.
-
-ALTER TABLE meeting_profiles ADD COLUMN school TEXT NOT NULL DEFAULT '성균관대 인사캠';
-
-ALTER TABLE meetings ADD COLUMN school TEXT NOT NULL DEFAULT '성균관대 인사캠';
-ALTER TABLE meetings ADD COLUMN guest_school TEXT;
--- Live event scheduling is owned by the server: the next random event and the
--- next like vote are stored here and claimed atomically through event_seq.
-ALTER TABLE meetings ADD COLUMN event_seq INTEGER NOT NULL DEFAULT 0;
-ALTER TABLE meetings ADD COLUMN next_event_at INTEGER;
-ALTER TABLE meetings ADD COLUMN next_vote_at INTEGER;
--- NULL = undecided, 1 = the room wants catfish members, 0 = no catfish.
-ALTER TABLE meetings ADD COLUMN catfish INTEGER;
-ALTER TABLE meetings ADD COLUMN host_catfish_code TEXT;
-ALTER TABLE meetings ADD COLUMN guest_catfish_code TEXT;
-CREATE UNIQUE INDEX IF NOT EXISTS meetings_host_catfish_code ON meetings (host_catfish_code);
-CREATE UNIQUE INDEX IF NOT EXISTS meetings_guest_catfish_code ON meetings (guest_catfish_code);
-
-ALTER TABLE meeting_members ADD COLUMN role TEXT NOT NULL DEFAULT 'member';
-ALTER TABLE meeting_members ADD COLUMN entered_at INTEGER;
-
--- meeting_places now backs every poll in the room: date, region and place.
-ALTER TABLE meeting_places ADD COLUMN poll TEXT NOT NULL DEFAULT 'place';
-ALTER TABLE meeting_places ADD COLUMN meta TEXT NOT NULL DEFAULT '';
-
-ALTER TABLE meeting_reviews ADD COLUMN partner INTEGER;
+--
+-- The v2 columns on existing tables (school, guest_school, event_seq,
+-- next_event_at, next_vote_at, catfish, host/guest_catfish_code, role,
+-- entered_at, poll, meta, partner) and the catfish-code unique indexes are
+-- added by the Worker itself (server/src/meeting.schema.ts). SQLite has no
+-- "ADD COLUMN IF NOT EXISTS", and the Worker may already have added them to the
+-- remote D1, so this file keeps only statements that are safe to re-run.
 
 CREATE TABLE IF NOT EXISTS meeting_catfish_votes (
   meeting_id TEXT NOT NULL REFERENCES meetings (id),

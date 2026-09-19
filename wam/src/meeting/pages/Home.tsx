@@ -66,6 +66,10 @@ export default function Home({
 
   if (mode === 'mine') {
     const mine = data?.mine ?? []
+    const myPosts = data?.myPosts ?? []
+    const lookingFor = genderLabel(
+      profile.gender === 'male' ? 'female' : 'male'
+    )
     return (
       <div className="page">
         {error && <Banner tone="error">{error}</Banner>}
@@ -91,6 +95,9 @@ export default function Home({
           </Section>
         )}
         <Section title="내 미팅">
+          <p className="muted small">
+            {lookingFor} 팀과 매칭됐거나 신청한 미팅이에요.
+          </p>
           {data && !mine.length && (
             <Empty icon={<CalendarIcon />}>아직 참여 중인 미팅이 없어요.</Empty>
           )}
@@ -104,6 +111,19 @@ export default function Home({
             ))}
           </div>
         </Section>
+        {!!myPosts.length && (
+          <Section title="내가 올린 모집글">
+            <div className="card-list">
+              {myPosts.map((card) => (
+                <MeetingCardView
+                  key={card.id}
+                  card={card}
+                  onClick={() => open(card)}
+                />
+              ))}
+            </div>
+          </Section>
+        )}
         <JoinWithCode
           loading={joinTeam.loading}
           onJoin={async (code) => {
@@ -120,7 +140,8 @@ export default function Home({
     )
   }
 
-  const others = (data?.meetings ?? []).filter((card) => !card.isHost)
+  // The server returns only opposite-gender posts, never the caller's own.
+  const others = data?.meetings ?? []
   const lookingFor = genderLabel(profile.gender === 'male' ? 'female' : 'male')
 
   return (

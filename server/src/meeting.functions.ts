@@ -50,9 +50,11 @@ import {
   type PrivateChatOutput,
   type Profile,
   type ProfileInput,
+  type RankEntry,
   type RankOutput,
   type RoomOutput,
   type SubmitReviewInput,
+  type Suggestion,
 } from "@tutorial/shared";
 import {
   CommandResultSchema,
@@ -71,6 +73,7 @@ import {
 import { z } from "zod";
 import { appId, appSecret } from "./config.js";
 import { getDatabase } from "./database.js";
+import { fetchRegionPlaces } from "./meeting.places.js";
 import { ensureMeetingSchema } from "./meeting.schema.js";
 import {
   AVAILABILITY_HOURS,
@@ -86,7 +89,6 @@ import {
   mutualPairs,
   newId,
   pickEvent,
-  placeSuggestions,
   regionSuggestions,
   toReal,
 } from "./meeting.logic.js";
@@ -96,6 +98,40 @@ import {
 } from "./target-token.js";
 
 const GROUP_NOTIFICATIONS = false;
+
+// Test data for the rank screen: real schools and departments, made-up
+// scores. Shown only while the channel has no reviews, labelled as a sample.
+const SAMPLE_RANK: RankEntry[] = [
+  { department: "경영학과", schools: ["연세대"], rating: 4.9, reviews: 42 },
+  { department: "미디어학부", schools: ["고려대"], rating: 4.8, reviews: 37 },
+  {
+    department: "글로벌경영학과",
+    schools: ["성균관대"],
+    rating: 4.7,
+    reviews: 33,
+  },
+  { department: "경제학부", schools: ["서울대"], rating: 4.6, reviews: 29 },
+  { department: "연극영화학과", schools: ["한양대"], rating: 4.5, reviews: 26 },
+  {
+    department: "영어영문학부",
+    schools: ["이화여대"],
+    rating: 4.4,
+    reviews: 24,
+  },
+  { department: "광고홍보학과", schools: ["중앙대"], rating: 4.3, reviews: 21 },
+  { department: "호텔경영학과", schools: ["경희대"], rating: 4.2, reviews: 18 },
+  { department: "경영학부", schools: ["서강대"], rating: 4.1, reviews: 15 },
+  {
+    department: "영어통번역학부",
+    schools: ["한국외대"],
+    rating: 4.0,
+    reviews: 12,
+  },
+];
+
+const PLACE_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
+const PLACE_RETRY_MS = 2 * 60 * 1000;
+const placeLookupFailedAt = new Map<string, number>();
 
 type Json = Record<string, unknown>;
 type Bind = string | number | null;
@@ -391,6 +427,37 @@ export class MeetingFunctions {
     }
   }
 
+  /**
+   * Real places around the chosen area, cached in D1 for a week. A failed
+   * lookup is remembered briefly so the polled room view does not retry
+   * the external API on every refresh.
+   */
+  private async placesFor(region: string): Promise<Suggestion[]> {
+    const now = Date.now();
+    const cached = await first<{ places_json: string; fetched_at: number }>(
+      "SELECT places_json, fetched_at FROM meeting_place_cache WHERE region = ?",
+      region,
+    );
+    if (cached && now - Number(cached.fetched_at) < PLACE_CACHE_MS)
+      return JSON.parse(cached.places_json) as Suggestion[];
+    if ((placeLookupFailedAt.get(region) ?? 0) > now - PLACE_RETRY_MS)
+      return cached ? (JSON.parse(cached.places_json) as Suggestion[]) : [];
+
+    const places = await fetchRegionPlaces(region);
+    if (!places) {
+      placeLookupFailedAt.set(region, now);
+      return cached ? (JSON.parse(cached.places_json) as Suggestion[]) : [];
+    }
+    await run(
+      `INSERT INTO meeting_place_cache (region, places_json, fetched_at) VALUES (?, ?, ?)
+       ON CONFLICT (region) DO UPDATE SET places_json = excluded.places_json, fetched_at = excluded.fetched_at`,
+      region,
+      JSON.stringify(places),
+      now,
+    );
+    return places;
+  }
+
   private groupFromToken(
     ctx: Context,
     managerId: string,
@@ -614,7 +681,7 @@ export class MeetingFunctions {
     }
     const open = await all<CardRow>(
       `${CARD_SELECT} WHERE m.channel_id = ?2 AND m.kind = 'open' AND m.status = 'recruiting'
-       AND m.gender = ?3 ${departmentFilter}
+       AND m.gender = ?3 AND m.host_id != ?1 ${departmentFilter}
        ORDER BY m.created_at DESC LIMIT 50`,
       ...binds,
     );
@@ -627,18 +694,36 @@ export class MeetingFunctions {
       opposite(profile.gender),
       profile.department,
     );
+    // "My meetings" are only meetings with an opposite-gender team: posts by
+    // the other gender I joined or applied to, and my team's posts once an
+    // opposite-gender team matched. Rows left over from a different profile
+    // gender never qualify.
     const mine = await all<CardRow>(
       `${CARD_SELECT} WHERE m.channel_id = ?2 AND m.status != 'cancelled' AND (
-         EXISTS (SELECT 1 FROM meeting_members mm WHERE mm.meeting_id = m.id AND mm.manager_id = ?1)
-         OR EXISTS (SELECT 1 FROM meeting_applications a WHERE a.meeting_id = m.id AND a.applicant_id = ?1 AND a.status = 'pending'))
+         (m.gender = ?3 AND (
+           EXISTS (SELECT 1 FROM meeting_members mm WHERE mm.meeting_id = m.id AND mm.manager_id = ?1 AND mm.side = 'guest')
+           OR EXISTS (SELECT 1 FROM meeting_applications a WHERE a.meeting_id = m.id AND a.applicant_id = ?1 AND a.status = 'pending')))
+         OR (m.gender = ?4 AND m.status != 'recruiting' AND
+           EXISTS (SELECT 1 FROM meeting_members mm WHERE mm.meeting_id = m.id AND mm.manager_id = ?1 AND mm.side = 'host')))
        ORDER BY m.created_at DESC LIMIT 30`,
       managerId,
       channelId,
+      opposite(profile.gender),
+      profile.gender,
+    );
+    const myPosts = await all<CardRow>(
+      `${CARD_SELECT} WHERE m.channel_id = ?2 AND m.status = 'recruiting' AND m.gender = ?3
+       AND EXISTS (SELECT 1 FROM meeting_members mm WHERE mm.meeting_id = m.id AND mm.manager_id = ?1 AND mm.side = 'host')
+       ORDER BY m.created_at DESC LIMIT 20`,
+      managerId,
+      channelId,
+      profile.gender,
     );
     const output: ListOutput = {
       meetings: open.map((row) => toCard(row, managerId)),
       proposals: proposals.map((row) => toCard(row, managerId)),
       mine: mine.map((row) => toCard(row, managerId)),
+      myPosts: myPosts.map((row) => toCard(row, managerId)),
     };
     return { ...output };
   }
@@ -1141,9 +1226,7 @@ export class MeetingFunctions {
       polls,
       availability,
       regionSuggestions: regionSuggestions(row.school, row.guest_school),
-      placeSuggestions: row.region
-        ? placeSuggestions(row.region, row.size * 2, row.meet_time)
-        : [],
+      placeSuggestions: row.region ? await this.placesFor(row.region) : [],
       linkedGroup: !!row.notify_group_id,
       hostCode:
         me.side === "host" && me.role === "member" ? row.host_code : null,
@@ -2237,17 +2320,20 @@ export class MeetingFunctions {
       if (row.school) stat.schools.add(row.school);
       stats.set(row.department, stat);
     }
-    const output: RankOutput = {
-      entries: [...stats.entries()]
-        .map(([department, stat]) => ({
-          department,
-          schools: [...stat.schools],
-          rating: stat.sum / stat.count,
-          reviews: stat.count,
-        }))
-        .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews),
-      totalReviews: rows.length,
-    };
+    const entries = [...stats.entries()]
+      .map(([department, stat]) => ({
+        department,
+        schools: [...stat.schools],
+        rating: stat.sum / stat.count,
+        reviews: stat.count,
+      }))
+      .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
+      .slice(0, 10);
+    // Until the channel has reviews, show clearly labelled sample data so the
+    // rank screen can be tried out. It is never mixed with real reviews.
+    const output: RankOutput = entries.length
+      ? { entries, totalReviews: rows.length, sample: false }
+      : { entries: SAMPLE_RANK, totalReviews: 0, sample: true };
     return { ...output };
   }
 

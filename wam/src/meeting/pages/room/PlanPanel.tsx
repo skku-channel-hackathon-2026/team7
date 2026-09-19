@@ -15,7 +15,9 @@ import { dateLabel } from '../../format'
 import { Banner, Button } from '../../ui'
 import TimeGrid from './TimeGrid'
 
-function bookingLink(query: string): string {
+/** Naver Map search for a place in the area: reviews and the booking button. */
+function naverMapLink(region: string, name: string): string {
+  const query = name.includes(region) ? name : `${region} ${name}`
   return `https://map.naver.com/p/search/${encodeURIComponent(query)}`
 }
 
@@ -179,12 +181,33 @@ export default function PlanPanel({
             {meeting.place && (
               <a
                 className="btn btn-primary btn-block booking"
-                href={bookingLink(meeting.place)}
+                href={
+                  data.placeSuggestions.find((s) => s.name === meeting.place)
+                    ?.link ?? naverMapLink(meeting.region, meeting.place)
+                }
                 target="_blank"
                 rel="noreferrer"
               >
-                예약 페이지 열기 ↗
+                네이버 지도에서 예약하기 ↗
               </a>
+            )}
+            {!locked && !data.placeSuggestions.length && (
+              <p className="muted small">
+                {meeting.region} 주변 장소를 불러오지 못했어요.{' '}
+                <a
+                  href={naverMapLink(meeting.region, '맛집')}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  네이버 지도에서 직접 찾기 ↗
+                </a>
+              </p>
+            )}
+            {!locked && !!data.placeSuggestions.length && (
+              <p className="muted small">
+                {meeting.region} 주변 실제 장소예요. 리뷰와 예약은 네이버
+                지도에서 확인하세요.
+              </p>
             )}
             {!locked &&
               data.placeSuggestions.map((suggestion) => (
@@ -192,11 +215,20 @@ export default function PlanPanel({
                   key={suggestion.name}
                   className={`place${meeting.place === suggestion.name ? ' decided' : ''}`}
                 >
-                  <div>
+                  <div className="place-body">
                     <b>{suggestion.name}</b>
-                    <div className="muted small">
-                      {suggestion.category} · {suggestion.note}
-                    </div>
+                    <div className="muted small">{suggestion.note}</div>
+                    <a
+                      className="place-link small"
+                      href={
+                        suggestion.link ??
+                        naverMapLink(meeting.region, suggestion.name)
+                      }
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      네이버 리뷰·예약 ↗
+                    </a>
                   </div>
                   <Button
                     small

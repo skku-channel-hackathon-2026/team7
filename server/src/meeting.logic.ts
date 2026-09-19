@@ -204,44 +204,6 @@ export function genderLabel(gender: string): string {
   return gender === "male" ? "남자" : gender === "female" ? "여자" : "무관";
 }
 
-export function placeSuggestions(
-  region: string,
-  people: number,
-  meetTime: string,
-): { name: string; category: string; note: string }[] {
-  const evening = !meetTime || Number(meetTime.slice(0, 2)) >= 18;
-  const seats = `${people}인 단체석`;
-  const list = [
-    {
-      name: `${region} 단체석 맛집`,
-      category: "음식점",
-      note: `${seats} · 첫 만남엔 대화하기 좋은 룸형 추천`,
-    },
-    evening
-      ? {
-          name: `${region} 분위기 좋은 술집`,
-          category: "술집",
-          note: `${meetTime} 이후 게임하기 좋은 곳`,
-        }
-      : {
-          name: `${region} 대형 카페`,
-          category: "카페",
-          note: `${seats} 가능한 넓은 테이블`,
-        },
-    {
-      name: `${region} 보드게임카페`,
-      category: "보드게임카페",
-      note: "어색함을 푸는 2차 코스",
-    },
-    {
-      name: `${region} 방탈출`,
-      category: "방탈출",
-      note: `${Math.ceil(people / 2)}명씩 팀을 섞어 협동 미션`,
-    },
-  ];
-  return list;
-}
-
 /** TimePick-style grid: the next week (from tomorrow, Korea time) in one-hour slots. */
 export const AVAILABILITY_HOURS = Array.from({ length: 12 }, (_, i) => 11 + i);
 

@@ -54,6 +54,11 @@ const people = {
 for (const [id, value] of Object.entries(people))
   await call(id, "meeting.saveProfile", value);
 
+// Before any review the rank screen shows 10 labelled sample entries.
+const sampleRank = await call("g1", "meeting.rank", {});
+assert.equal(sampleRank.sample, true);
+assert.equal(sampleRank.entries.length, 10);
+
 // Posts carry only school, department, gender and size.
 const { meetingId } = await call("h1", "meeting.create", {
   department: "컴퓨터공학과",
@@ -70,8 +75,17 @@ assert.ok(
   ),
 );
 await assert.rejects(call("h2", "meeting.apply", { meetingId }));
+// The host's own post is listed under "my posts", not "my meetings".
+const hostList = await call("h1", "meeting.list", {});
+assert.ok(hostList.myPosts.some((m) => m.id === meetingId));
+assert.ok(!hostList.mine.some((m) => m.id === meetingId));
+assert.ok(!hostList.meetings.some((m) => m.id === meetingId));
 
 await call("g1", "meeting.apply", { meetingId, message: "안녕하세요!" });
+// A woman's "my meetings" holds the men's post she applied to.
+assert.ok(
+  (await call("g1", "meeting.list", {})).mine.some((m) => m.id === meetingId),
+);
 const detail = await call("h1", "meeting.get", { meetingId });
 assert.equal(detail.applications[0].profile.school, "이화여대");
 await call("h1", "meeting.decide", {
@@ -84,6 +98,15 @@ await call("g2", "meeting.joinTeam", { code: guestCode });
 
 let room = await call("h1", "meeting.room", { meetingId });
 assert.equal(room.members.length, 4);
+// Once matched with the women's team it is a "my meeting" for both sides.
+for (const id of ["h1", "h2", "g1", "g2"]) {
+  const list = await call(id, "meeting.list", {});
+  assert.ok(
+    list.mine.some((m) => m.id === meetingId),
+    `${id} mine`,
+  );
+  assert.ok(!list.myPosts.some((m) => m.id === meetingId), `${id} posts`);
+}
 assert.ok(
   room.messages.some((m) =>
     m.body.includes("채팅방 개설이 완료되었습니다. 서로 인사하세요!"),
@@ -130,6 +153,16 @@ assert.equal(room.meeting.meetDate, dates[1]);
 assert.equal(room.meeting.meetTime, "19:00");
 assert.equal(room.meeting.region, area);
 assert.ok(room.placeSuggestions.length > 0);
+// Real place names around the area, each linked to Naver Map.
+for (const suggestion of room.placeSuggestions) {
+  assert.ok(
+    suggestion.link.startsWith("https://map.naver.com/p/search/"),
+    suggestion.name,
+  );
+  assert.ok(
+    !/보드게임카페|방탈출|단체석 맛집|분위기 좋은 술집/.test(suggestion.name),
+  );
+}
 const place = await call("g1", "meeting.proposePlace", {
   meetingId,
   poll: "place",
@@ -249,6 +282,7 @@ await call("h1", "meeting.submitReview", { ...review, partner: 5 });
 await call("h2", "meeting.submitReview", { ...review, partner: 4 });
 await call("g1", "meeting.submitReview", { ...review, partner: 3 });
 const rank = await call("g2", "meeting.rank", {});
+assert.equal(rank.sample, false);
 const business = rank.entries.find((e) => e.department === "경영학과");
 assert.equal(business.rating, 4.5);
 assert.equal(business.reviews, 2);
@@ -257,6 +291,21 @@ assert.equal(
   rank.entries.find((e) => e.department === "컴퓨터공학과").rating,
   3,
 );
+
+// Switching the profile gender leaves older posts out of every list.
+const x1 = profile("건국대", "경영학과", "male", 24, "insta_x1");
+await call("x1", "meeting.saveProfile", x1);
+const switched = await call("x1", "meeting.create", {
+  department: "경영학과",
+  size: 2,
+});
+await call("x1", "meeting.saveProfile", { ...x1, gender: "female" });
+const switchedList = await call("x1", "meeting.list", {});
+for (const key of ["meetings", "mine", "myPosts"])
+  assert.ok(
+    !switchedList[key].some((m) => m.id === switched.meetingId),
+    `switched ${key}`,
+  );
 
 const history = await call("h1", "meeting.history", {});
 assert.equal(history.records[0].otherDepartment, "경영학과");

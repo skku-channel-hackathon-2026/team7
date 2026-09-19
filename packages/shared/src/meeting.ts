@@ -312,7 +312,10 @@ export interface ListOutput {
   meetings: MeetingCard[];
   /** Direct proposals addressed to the caller's department. */
   proposals: MeetingCard[];
+  /** Meetings with an opposite-gender team the caller joined or applied to. */
   mine: MeetingCard[];
+  /** The caller's own team posts that are still recruiting. */
+  myPosts: MeetingCard[];
 }
 
 export interface ApplicationView {
@@ -365,6 +368,8 @@ export interface Suggestion {
   name: string;
   category: string;
   note: string;
+  /** Naver Map page for the place (reviews and Naver booking). */
+  link?: string;
 }
 
 /** TimePick-style availability grid for the group chat. */
@@ -498,6 +503,8 @@ export interface RankEntry {
 export interface RankOutput {
   entries: RankEntry[];
   totalReviews: number;
+  /** True when there are no reviews yet and `entries` is sample data. */
+  sample: boolean;
 }
 
 export interface PrivateChatOutput {

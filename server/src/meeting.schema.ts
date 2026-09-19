@@ -1,6 +1,6 @@
 import type { AppDatabase } from "./database.js";
 
-// The meeting tables from cloudflare/migrations/0002–0004, applied by the Worker
+// The meeting tables from cloudflare/migrations/0002–0005, applied by the Worker
 // itself so the remote D1 needs no manual migration. Every statement is
 // idempotent: tables and indexes use IF NOT EXISTS, and ADD COLUMN on a column
 // that already exists is skipped. Keep this in sync with new migrations.
@@ -267,6 +267,14 @@ const MEETING_SCHEMA: string[] = [
       manager_id TEXT NOT NULL,
       slot TEXT NOT NULL,
       PRIMARY KEY (meeting_id, manager_id, slot)
+    )
+  `,
+  // 0005_meeting_place_cache.sql
+  `
+    CREATE TABLE IF NOT EXISTS meeting_place_cache (
+      region TEXT PRIMARY KEY,
+      places_json TEXT NOT NULL CHECK (json_valid(places_json)),
+      fetched_at INTEGER NOT NULL
     )
   `,
 ];

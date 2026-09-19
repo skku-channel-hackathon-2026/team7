@@ -1,0 +1,1826 @@
+.meeting-app {
+  --bg: #f6f4f7;
+  --surface: #ffffff;
+  --surface-2: #f1eef3;
+  --text: #1d1b22;
+  --muted: #7a7482;
+  --line: #e7e2ea;
+  --primary: #f0457a;
+  --primary-2: #ff7a59;
+  --primary-soft: #ffe8ef;
+  --host: #4f6bff;
+  --host-soft: #e7ebff;
+  --guest: #f0457a;
+  --guest-soft: #ffe8ef;
+  --ok: #17a673;
+  --warn: #e68a00;
+  --danger: #e5484d;
+  --shadow: 0 1px 2px rgba(30, 20, 40, 0.06), 0 6px 18px rgba(30, 20, 40, 0.06);
+
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    Inter,
+    -apple-system,
+    'Apple SD Gothic Neo',
+    'Noto Sans KR',
+    sans-serif;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.meeting-app.dark {
+  --bg: #1c1b20;
+  --surface: #28262d;
+  --surface-2: #322f38;
+  --text: #f3f1f5;
+  --muted: #a39dab;
+  --line: #3b3842;
+  --primary-soft: #4a2432;
+  --host-soft: #252c4d;
+  --guest-soft: #4a2432;
+  --shadow: none;
+}
+
+.meeting-app * {
+  box-sizing: border-box;
+}
+
+.meeting-app button {
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.meeting-app input,
+.meeting-app select,
+.meeting-app textarea {
+  width: 100%;
+  font: inherit;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  outline: none;
+  resize: none;
+}
+
+.meeting-app input:focus,
+.meeting-app select:focus,
+.meeting-app textarea:focus {
+  border-color: var(--primary);
+}
+
+.meeting-app .muted {
+  color: var(--muted);
+}
+.meeting-app .small {
+  font-size: 12px;
+}
+.meeting-app .center {
+  text-align: center;
+}
+
+/* ----- shell ----- */
+.meeting-app .app-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  flex-shrink: 0;
+}
+.meeting-app .app-title {
+  flex: 1;
+  font-weight: 700;
+  font-size: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.meeting-app .app-sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--muted);
+}
+.meeting-app .logo {
+  font-size: 22px;
+}
+.meeting-app .icon-btn {
+  border: none;
+  background: var(--surface-2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 20px !important;
+  line-height: 1;
+}
+.meeting-app .app-body {
+  flex: 1;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.meeting-app .tabbar {
+  display: flex;
+  border-top: 1px solid var(--line);
+  background: var(--surface);
+  flex-shrink: 0;
+}
+.meeting-app .tabbar button {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 8px 0 10px;
+  font-size: 11px !important;
+  color: var(--muted) !important;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.meeting-app .tabbar button.active {
+  color: var(--primary) !important;
+  font-weight: 700;
+}
+
+.meeting-app .page {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.meeting-app .loading {
+  padding: 40px;
+  text-align: center;
+  color: var(--muted);
+}
+
+/* ----- primitives ----- */
+.meeting-app .btn {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 16px;
+  font-weight: 700 !important;
+  transition:
+    transform 0.08s,
+    opacity 0.15s;
+  white-space: nowrap;
+}
+.meeting-app .btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.meeting-app .btn:disabled {
+  opacity: 0.45;
+  cursor: default !important;
+}
+.meeting-app .btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(240, 69, 122, 0.3);
+}
+.meeting-app .btn-secondary {
+  background: var(--surface-2);
+}
+.meeting-app .btn-ghost {
+  background: none;
+  color: var(--muted) !important;
+  padding: 6px 8px;
+}
+.meeting-app .btn-danger {
+  background: none;
+  border: 1px solid var(--danger);
+  color: var(--danger) !important;
+}
+.meeting-app .btn-small {
+  padding: 7px 12px;
+  font-size: 13px !important;
+  border-radius: 10px;
+}
+.meeting-app .btn-block {
+  width: 100%;
+}
+.meeting-app .button-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.meeting-app .button-row > .btn:not(.btn-small) {
+  flex: 1;
+}
+
+.meeting-app .chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+  scrollbar-width: none;
+}
+.meeting-app .chip {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px !important;
+  white-space: nowrap;
+}
+.meeting-app .chip-active {
+  background: var(--text);
+  border-color: var(--text);
+  color: var(--bg) !important;
+  font-weight: 700;
+}
+.meeting-app .chip-select {
+  width: auto !important;
+  border-radius: 999px !important;
+  padding: 5px 10px !important;
+  font-size: 13px !important;
+}
+
+.meeting-app .segmented {
+  display: flex;
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 3px;
+}
+.meeting-app .segmented button {
+  flex: 1;
+  border: none;
+  background: none;
+  border-radius: 10px;
+  padding: 8px 6px;
+  font-size: 13px !important;
+  color: var(--muted) !important;
+}
+.meeting-app .segmented button.active {
+  background: var(--surface);
+  color: var(--text) !important;
+  font-weight: 700;
+  box-shadow: var(--shadow);
+}
+
+.meeting-app .field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.meeting-app .field-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.meeting-app .field-label em {
+  font-style: normal;
+  font-weight: 400;
+  margin-left: 6px;
+}
+.meeting-app .row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.meeting-app .range {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.meeting-app .stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 3px;
+  min-width: 0;
+  flex: 1;
+}
+.meeting-app .stepper button {
+  border: none;
+  background: var(--surface-2);
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  font-size: 16px !important;
+}
+.meeting-app .stepper button:disabled {
+  opacity: 0.35;
+}
+.meeting-app .stepper span {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.meeting-app .stars {
+  display: flex;
+  gap: 2px;
+}
+.meeting-app .stars button {
+  border: none;
+  background: none;
+  font-size: 22px !important;
+  color: var(--line) !important;
+  padding: 0 1px;
+}
+.meeting-app .stars button.on {
+  color: #ffb400 !important;
+}
+
+.meeting-app .banner {
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.meeting-app .banner-info {
+  background: var(--host-soft);
+}
+.meeting-app .banner-error {
+  background: #ffe7e7;
+  color: #b42318;
+}
+.meeting-app.dark .banner-error {
+  background: #4a2323;
+  color: #ffb4ab;
+}
+.meeting-app .banner-success {
+  background: #e3f7ee;
+  color: #0b7a52;
+}
+.meeting-app.dark .banner-success {
+  background: #1d3b30;
+  color: #7ee0b5;
+}
+
+.meeting-app .empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 24px 8px;
+  font-size: 13px;
+}
+.meeting-app .empty-icon {
+  font-size: 32px;
+  margin-bottom: 6px;
+}
+
+.meeting-app .section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.meeting-app .section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.meeting-app .section-head h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.meeting-app .badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--muted);
+  white-space: nowrap;
+}
+.meeting-app .badge-recruiting {
+  background: #e3f7ee;
+  color: #0b7a52;
+}
+.meeting-app .badge-matched {
+  background: var(--host-soft);
+  color: var(--host);
+}
+.meeting-app .badge-live {
+  background: var(--primary);
+  color: #fff;
+  animation: pulse 1.6s infinite;
+}
+.meeting-app .badge-proposal,
+.meeting-app .badge-applied {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+.meeting-app .badge-mine {
+  background: var(--text);
+  color: var(--bg);
+}
+@keyframes pulse {
+  50% {
+    opacity: 0.65;
+  }
+}
+
+/* ----- home ----- */
+.meeting-app .hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 18px;
+  border-radius: 18px;
+  background:
+    radial-gradient(
+      circle at 90% 0%,
+      rgba(255, 255, 255, 0.35),
+      transparent 50%
+    ),
+    linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+}
+.meeting-app .hero h2 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  line-height: 1.3;
+}
+.meeting-app .hero .btn-primary {
+  background: #fff;
+  color: var(--primary) !important;
+  box-shadow: none;
+}
+.meeting-app .hero-kicker {
+  font-size: 12px;
+  opacity: 0.9;
+}
+.meeting-app .hero-small {
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.meeting-app .hero-small p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  opacity: 0.95;
+}
+.meeting-app .hero-emoji {
+  font-size: 36px;
+}
+
+.meeting-app .card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.meeting-app .meeting-card {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 14px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: transform 0.1s;
+}
+.meeting-app .meeting-card:active {
+  transform: scale(0.99);
+}
+.meeting-app .meeting-card.proposal {
+  border-color: var(--primary);
+  background: linear-gradient(180deg, var(--primary-soft), var(--surface) 60%);
+}
+.meeting-app .meeting-card-top {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.meeting-app .meeting-card-size {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--primary);
+  font-size: 15px;
+}
+.meeting-app .meeting-card-title {
+  font-size: 16px;
+  font-weight: 800;
+}
+.meeting-app .meeting-card-target {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+}
+.meeting-app .meeting-card-meta {
+  font-size: 13px;
+  color: var(--muted);
+}
+.meeting-app .meeting-card-meta.strong {
+  color: var(--text);
+  font-weight: 600;
+}
+.meeting-app .meeting-card-foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--muted);
+  border-top: 1px dashed var(--line);
+  margin-top: 6px;
+  padding-top: 8px;
+}
+
+/* ----- create / detail ----- */
+.meeting-app .form-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.meeting-app .form-card-title {
+  font-weight: 800;
+}
+.meeting-app .detail-hero {
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.meeting-app .detail-hero h2 {
+  margin: 8px 0 2px;
+  font-size: 20px;
+}
+.meeting-app .detail-badges {
+  display: flex;
+  gap: 6px;
+}
+.meeting-app .detail-target {
+  color: var(--primary);
+  font-weight: 700;
+}
+.meeting-app .detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 12px;
+}
+.meeting-app .detail-grid div {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-weight: 700;
+  font-size: 13px;
+}
+.meeting-app .detail-grid span {
+  display: block;
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 500;
+}
+.meeting-app .detail-intro {
+  margin: 12px 0 0;
+  font-style: italic;
+}
+.meeting-app .blind-note {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.meeting-app .application {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .application p {
+  margin: 0;
+}
+.meeting-app .application-head {
+  display: flex;
+  flex-direction: column;
+}
+.meeting-app .invite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+  border: 1px dashed var(--primary);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.meeting-app .invite-code {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 4px;
+  color: var(--primary);
+  font-family: ui-monospace, Menlo, monospace;
+}
+.meeting-app .input-row {
+  display: flex;
+  gap: 8px;
+}
+.meeting-app .input-row input {
+  flex: 1;
+}
+
+/* ----- room ----- */
+.meeting-app .room {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+.meeting-app .room-head {
+  padding: 12px 16px 8px;
+  background: var(--surface);
+}
+.meeting-app .room-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+.meeting-app .room-sub {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 4px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.meeting-app .pill-warn {
+  background: #fff1db;
+  color: var(--warn);
+  border-radius: 999px;
+  padding: 1px 8px;
+  font-weight: 700;
+}
+.meeting-app.dark .pill-warn {
+  background: #4a3718;
+}
+.meeting-app .link-group {
+  margin: 8px 16px 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--host-soft);
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+}
+.meeting-app .room > .banner {
+  margin: 8px 16px 0;
+}
+.meeting-app .tabs {
+  display: flex;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  position: sticky;
+  top: 0;
+  z-index: 2;
+}
+.meeting-app .tabs button {
+  flex: 1;
+  border: none;
+  background: none;
+  padding: 10px 0;
+  font-size: 13px !important;
+  color: var(--muted) !important;
+  border-bottom: 2px solid transparent;
+}
+.meeting-app .tabs button.active {
+  color: var(--text) !important;
+  font-weight: 800;
+  border-bottom-color: var(--primary);
+}
+.meeting-app .room-body {
+  flex: 1;
+}
+.meeting-app .panel {
+  padding: 14px 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.meeting-app .team {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meeting-app .team-title {
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 4px 4px;
+}
+.meeting-app .person {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 4px;
+  border-radius: 10px;
+}
+.meeting-app .person.me {
+  background: var(--surface-2);
+}
+.meeting-app .person.empty-slot {
+  opacity: 0.6;
+}
+.meeting-app .person-name {
+  font-weight: 700;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+.meeting-app .me-tag {
+  font-size: 10px;
+  background: var(--text);
+  color: var(--bg);
+  border-radius: 6px;
+  padding: 0 5px;
+}
+.meeting-app .confirm {
+  margin-left: auto;
+  font-size: 11px;
+  color: var(--muted);
+}
+.meeting-app .confirm.ok {
+  color: var(--ok);
+  font-weight: 700;
+}
+.meeting-app .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 13px;
+  background: var(--surface-2);
+  flex-shrink: 0;
+}
+.meeting-app .avatar-host {
+  background: var(--host-soft);
+  color: var(--host);
+}
+.meeting-app .avatar-guest {
+  background: var(--guest-soft);
+  color: var(--guest);
+}
+
+.meeting-app .chat {
+  min-height: 100%;
+}
+.meeting-app .messages {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 280px;
+}
+.meeting-app .bubble-row {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  max-width: 80%;
+}
+.meeting-app .bubble-row.mine {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+.meeting-app .bubble-alias {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 0 0 2px 4px;
+}
+.meeting-app .bubble {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  border-radius: 16px 16px 16px 4px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.meeting-app .mine .bubble {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+  color: #fff;
+  border: none;
+  border-radius: 16px 16px 4px 16px;
+}
+.meeting-app .bubble-time {
+  font-size: 10px;
+  color: var(--muted);
+  margin: 2px 4px 0;
+}
+.meeting-app .system-message {
+  align-self: center;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  background: var(--surface-2);
+  border-radius: 12px;
+  padding: 6px 12px;
+  white-space: pre-wrap;
+  max-width: 92%;
+}
+.meeting-app .system-message.mc {
+  background: var(--primary-soft);
+  color: var(--text);
+  border: 1px solid var(--primary);
+  font-weight: 600;
+}
+
+.meeting-app .plan-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .plan-row {
+  display: flex;
+  justify-content: space-between;
+}
+.meeting-app .plan-row span {
+  color: var(--muted);
+}
+.meeting-app .warn-text {
+  margin: 0;
+  color: var(--warn);
+  font-size: 12px;
+  font-weight: 700;
+}
+.meeting-app .place {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.meeting-app .place.suggestion {
+  border-style: dashed;
+}
+.meeting-app .place .button-row {
+  flex-wrap: nowrap;
+}
+.meeting-app .tag {
+  font-size: 11px;
+  margin-left: 6px;
+  color: var(--primary);
+  font-weight: 700;
+}
+.meeting-app .link {
+  font-size: 12px;
+  color: var(--host);
+  white-space: nowrap;
+}
+.meeting-app .vote {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px !important;
+}
+.meeting-app .vote.on {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  font-weight: 700;
+}
+
+/* ----- MC ----- */
+.meeting-app .mc-intro {
+  text-align: center;
+  padding: 10px 0 0;
+}
+.meeting-app .mc-intro h3 {
+  margin: 6px 0 4px;
+}
+.meeting-app .mc-intro p {
+  margin: 0;
+  font-size: 13px;
+}
+.meeting-app .mc-mic {
+  font-size: 44px;
+}
+.meeting-app .mc-card {
+  border-radius: 20px;
+  padding: 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #3a2e6e, #6c4bd1);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: pop 0.35s ease-out;
+  box-shadow: 0 10px 30px rgba(60, 40, 120, 0.3);
+}
+.meeting-app .mc-card.stage-question {
+  background: linear-gradient(135deg, #2f5bff, #6aa2ff);
+}
+.meeting-app .mc-card.stage-mission {
+  background: linear-gradient(135deg, #ff7a18, #ffb347);
+}
+.meeting-app .mc-card.stage-stick,
+.meeting-app .mc-card.stage-after {
+  background: linear-gradient(135deg, var(--primary), var(--primary-2));
+}
+.meeting-app .mc-card.stage-topic {
+  background: linear-gradient(135deg, #0f9b8e, #45d0a8);
+}
+@keyframes pop {
+  from {
+    transform: scale(0.94);
+    opacity: 0;
+  }
+}
+.meeting-app .mc-card .btn-secondary {
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff !important;
+}
+.meeting-app .mc-card-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.9;
+}
+.meeting-app .mc-demo {
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  padding: 0 6px;
+  font-weight: 700;
+}
+.meeting-app .mc-stage {
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meeting-app .mc-icon {
+  font-size: 26px;
+}
+.meeting-app .mc-content {
+  font-size: 19px;
+  font-weight: 800;
+  line-height: 1.35;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
+  padding: 14px;
+}
+.meeting-app .mc-guide {
+  opacity: 0.92;
+}
+.meeting-app .mc-progress {
+  height: 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.25);
+  overflow: hidden;
+}
+.meeting-app .mc-progress div {
+  height: 100%;
+  background: #fff;
+  transition: width 0.25s linear;
+}
+.meeting-app .mc-foot {
+  font-size: 12px;
+  opacity: 0.95;
+}
+.meeting-app .timeline {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 6px 12px;
+}
+.meeting-app .timeline-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  color: var(--muted);
+}
+.meeting-app .timeline-item + .timeline-item {
+  border-top: 1px solid var(--line);
+}
+.meeting-app .timeline-item.current {
+  color: var(--text);
+  font-weight: 800;
+}
+.meeting-app .timeline-item.done .timeline-dot {
+  background: var(--ok);
+  color: #fff;
+}
+.meeting-app .timeline-item.current .timeline-dot {
+  background: var(--primary);
+}
+.meeting-app .timeline-dot {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+.meeting-app .timeline-min {
+  width: 36px;
+  font-size: 12px;
+}
+.meeting-app .pick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 8px;
+}
+.meeting-app .pick {
+  position: relative;
+  border: 2px solid var(--line);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.meeting-app .pick.on {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.meeting-app .pick-check {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+}
+.meeting-app .stick-result {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.meeting-app .stick-pair {
+  font-weight: 800;
+  font-size: 16px;
+  text-align: center;
+  background: var(--primary-soft);
+  border-radius: 10px;
+  padding: 8px;
+}
+.meeting-app .after-status {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.meeting-app .after-match {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  background: var(--primary-soft);
+  border: 1px solid var(--primary);
+  border-radius: 14px;
+  padding: 12px;
+  animation: pop 0.35s ease-out;
+}
+.meeting-app .after-match-title {
+  font-weight: 800;
+}
+.meeting-app .review-row .segmented {
+  flex-shrink: 0;
+  min-width: 140px;
+}
+.meeting-app .review-row .segmented button {
+  white-space: nowrap;
+}
+.meeting-app .review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ----- history / chat ----- */
+.meeting-app .record,
+.meeting-app .chat-item {
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 14px;
+  padding: 12px 14px;
+  box-shadow: var(--shadow);
+}
+.meeting-app .record-date {
+  display: flex;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--muted);
+  font-size: 12px;
+}
+.meeting-app .record-title {
+  font-size: 16px;
+  font-weight: 800;
+  margin: 4px 0;
+}
+.meeting-app .record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.meeting-app .record-after {
+  color: var(--primary);
+  font-weight: 700;
+}
+.meeting-app .record-todo {
+  color: var(--warn);
+  font-weight: 700;
+}
+.meeting-app .chat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.meeting-app .chat-item-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.meeting-app .chat-item-body .small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.meeting-app .chevron {
+  font-size: 20px;
+  color: var(--muted);
+}
+.meeting-app .stats {
+  display: grid;
+  gap: 8px;
+}
+.meeting-app .stat {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.meeting-app .stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+.meeting-app .stat-grid b {
+  color: var(--text);
+  font-size: 13px;
+}
+.meeting-app .private-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: var(--primary-soft);
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+/* ----- v2: simplified cards ----- */
+.meeting-app .meeting-card {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+}
+.meeting-app .meeting-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  gap: 1px;
+}
+.meeting-app .meeting-card-school {
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+.meeting-app .meeting-card-side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+.meeting-app .gender-dot {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+.meeting-app .gender-male {
+  background: var(--host-soft);
+  color: var(--host);
+}
+.meeting-app .gender-female {
+  background: var(--guest-soft);
+  color: var(--guest);
+}
+.meeting-app .preview-card {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+}
+.meeting-app .detail-school {
+  color: var(--muted);
+  font-weight: 700;
+}
+.meeting-app .detail-sub {
+  margin-top: 6px;
+  font-weight: 600;
+}
+
+/* ----- v2: room ----- */
+.meeting-app .member-strip {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+.meeting-app .member-strip .avatar {
+  width: 32px;
+  height: 32px;
+  font-size: 11px;
+}
+.meeting-app .avatar.me {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+.meeting-app .step {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .step.done {
+  border-color: var(--ok);
+}
+.meeting-app .step-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.meeting-app .step-no {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--text);
+  color: var(--bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 800;
+}
+.meeting-app .step.done .step-no {
+  background: var(--ok);
+  color: #fff;
+}
+.meeting-app .step-result {
+  margin-left: auto;
+  font-weight: 800;
+  color: var(--ok);
+}
+.meeting-app .poll-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+.meeting-app .poll-option.decided {
+  background: #e3f7ee;
+}
+.meeting-app.dark .poll-option.decided {
+  background: #1d3b30;
+}
+.meeting-app .poll-label {
+  flex: 1;
+  font-weight: 600;
+}
+.meeting-app .suggest-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+.meeting-app .suggest {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  text-align: left;
+  border: 1px dashed var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 8px 10px;
+}
+.meeting-app .place.decided {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+.meeting-app .booking {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+.meeting-app .catfish-card,
+.meeting-app .start-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .catfish-card p,
+.meeting-app .start-card p,
+.meeting-app .start-card h3 {
+  margin: 0;
+}
+.meeting-app .start-card {
+  text-align: center;
+  align-items: stretch;
+}
+.meeting-app .big-emoji {
+  font-size: 44px;
+  text-align: center;
+}
+.meeting-app .center-page {
+  text-align: center;
+  justify-content: center;
+  min-height: 60%;
+}
+.meeting-app .center-page h2 {
+  margin: 0;
+}
+
+/* ----- v2: rank ----- */
+.meeting-app .rank-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .rank-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.meeting-app .rank-no {
+  width: 28px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--muted);
+  text-align: center;
+}
+.meeting-app .rank-1 {
+  color: #e0a100;
+}
+.meeting-app .rank-2 {
+  color: #8e9aa6;
+}
+.meeting-app .rank-3 {
+  color: #b87333;
+}
+.meeting-app .rank-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.meeting-app .rank-score {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.meeting-app .rank-stars {
+  color: #ffb400;
+  letter-spacing: 1px;
+}
+
+/* ----- v2: live meeting screen (nothing but the current event) ----- */
+.meeting-app .live-screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 18px;
+  color: #fff;
+  background: linear-gradient(160deg, #2b2350, #4b3a8f);
+  transition: background 0.6s;
+}
+.meeting-app .live-screen.live-topic {
+  background: linear-gradient(160deg, #1f3fbf, #5a8dff);
+}
+.meeting-app .live-screen.live-mission {
+  background: linear-gradient(160deg, #e0590b, #ffb347);
+}
+.meeting-app .live-screen.live-game {
+  background: linear-gradient(160deg, #0d8a7e, #45d0a8);
+}
+.meeting-app .live-screen.live-vote {
+  background: linear-gradient(160deg, #d6336c, #ff7a59);
+}
+.meeting-app .live-screen.live-catfish {
+  background: linear-gradient(160deg, #0b6fa4, #37b6e6);
+}
+.meeting-app .live-screen.live-start {
+  background: linear-gradient(160deg, #3a2e6e, #f0457a);
+}
+.meeting-app .live-top {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  opacity: 0.85;
+  font-weight: 600;
+}
+.meeting-app .live-center {
+  margin: auto;
+  font-size: 16px;
+}
+.meeting-app .live-card {
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+  animation: pop 0.45s ease-out;
+}
+.meeting-app .live-emoji {
+  font-size: 64px;
+  line-height: 1;
+}
+.meeting-app .live-title {
+  font-size: 26px;
+  font-weight: 800;
+}
+.meeting-app .live-body {
+  font-size: 19px;
+  font-weight: 700;
+  line-height: 1.45;
+  background: rgba(255, 255, 255, 0.16);
+  border-radius: 18px;
+  padding: 18px;
+  white-space: pre-wrap;
+}
+.meeting-app .live-body.small {
+  font-size: 14px;
+  font-weight: 500;
+  background: none;
+  padding: 0;
+  opacity: 0.9;
+}
+.meeting-app .live-count {
+  font-size: 22px;
+}
+.meeting-app .live-count b {
+  font-size: 44px;
+  display: block;
+}
+.meeting-app .live-picks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+.meeting-app .live-pick {
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  border-radius: 16px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  align-items: center;
+  font-size: 12px !important;
+}
+.meeting-app .live-pick b {
+  font-size: 20px;
+}
+.meeting-app .live-pick.on {
+  background: #fff;
+  color: #d6336c !important;
+  border-color: #fff;
+}
+.meeting-app .live-foot {
+  font-size: 13px;
+  opacity: 0.9;
+}
+.meeting-app .live-error {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.meeting-app .live-bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.meeting-app .live-demo {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 11px;
+  opacity: 0.8;
+}
+.meeting-app .live-demo button,
+.meeting-app .live-end button {
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff !important;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px !important;
+}
+.meeting-app .live-end {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 13px;
+}
+.meeting-app .live-end button.danger {
+  background: #fff;
+  color: #d6336c !important;
+  font-weight: 700;
+}
+.meeting-app .live-end-link {
+  border: none;
+  background: none;
+  color: rgba(255, 255, 255, 0.7) !important;
+  font-size: 12px !important;
+  text-decoration: underline;
+}
+
+/* ----- icons (Bezier, currentColor): point color when active, gray otherwise ----- */
+.meeting-app svg {
+  flex-shrink: 0;
+}
+.meeting-app .tabbar button {
+  gap: 3px;
+}
+.meeting-app .tabbar button svg {
+  font-size: 22px;
+}
+.meeting-app .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted) !important;
+}
+.meeting-app .icon-btn svg {
+  font-size: 18px;
+}
+.meeting-app .tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+}
+.meeting-app .tabs button svg {
+  font-size: 16px;
+}
+.meeting-app .tabs button.active {
+  color: var(--primary) !important;
+}
+.meeting-app .room-sub svg,
+.meeting-app .step .muted svg {
+  font-size: 14px;
+  vertical-align: -2px;
+}
+.meeting-app .empty-icon {
+  width: 52px;
+  height: 52px;
+  margin: 0 auto 8px;
+  border-radius: 50%;
+  background: var(--surface-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: var(--muted);
+}
+.meeting-app .stars button {
+  display: inline-flex;
+  font-size: 24px !important;
+}
+.meeting-app .rank-stars {
+  display: inline-flex;
+  gap: 1px;
+  font-size: 14px;
+  color: var(--line);
+}
+.meeting-app .rank-stars .on {
+  color: #ffb400;
+}
+.meeting-app .vote {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--muted) !important;
+}
+.meeting-app .vote.on {
+  color: var(--primary) !important;
+}
+.meeting-app .vote svg {
+  font-size: 15px;
+}
+.meeting-app .pick-check {
+  color: var(--primary);
+  font-size: 16px;
+}
+.meeting-app .ok-icon {
+  color: var(--ok);
+  font-size: 16px;
+  vertical-align: -3px;
+}
+.meeting-app svg.chevron {
+  font-size: 18px;
+  color: var(--muted);
+}
+.meeting-app .gender-dot {
+  font-size: 15px;
+}
+.meeting-app .icon-circle {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 34px;
+}
+.meeting-app .live-icon {
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 42px;
+  color: #fff;
+}
+.meeting-app .live-top span:first-child {
+  font-weight: 800;
+}
+
+/* ----- TimePick-style availability grid ----- */
+.meeting-app .timegrid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.meeting-app .timegrid > p {
+  margin: 0;
+}
+.meeting-app .grid-wrap {
+  touch-action: pan-y;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.meeting-app .grid-wrap.editing {
+  touch-action: none;
+  cursor: pointer;
+}
+.meeting-app .grid {
+  display: grid;
+  gap: 2px;
+}
+.meeting-app .grid-date {
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--muted);
+  white-space: pre-line;
+  padding-bottom: 2px;
+}
+.meeting-app .grid-hour {
+  font-size: 10px;
+  color: var(--muted);
+  text-align: right;
+  padding-right: 4px;
+  line-height: 20px;
+}
+.meeting-app .cell {
+  height: 20px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  border: none;
+  padding: 0;
+  font-size: 10px !important;
+  font-weight: 700;
+  color: #fff !important;
+  transition: background 0.08s;
+}
+.meeting-app .cell.on {
+  background: var(--primary);
+}
+.meeting-app .cell.focus {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+.meeting-app .cell.decided {
+  outline: 2px solid var(--ok);
+  outline-offset: 1px;
+}
+.meeting-app .grid-focus {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.meeting-app .best {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.meeting-app .best-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+.meeting-app .best-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 6px 10px;
+}
+.meeting-app .best-row.decided {
+  background: #e3f7ee;
+}
+.meeting-app.dark .best-row.decided {
+  background: #1d3b30;
+}
+.meeting-app .best-slot {
+  flex: 1;
+  font-weight: 700;
+}
+.meeting-app .best-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--muted);
+}

@@ -7,8 +7,10 @@ import { useWamClose } from '@channel.io/app-sdk-wam'
 
 import { isMobile } from './utils/userAgent'
 import Send from './pages/Send'
+import MeetingApp from './meeting/MeetingApp'
+import { isTutorialWam } from './utils/wamRoute'
 
-function App() {
+function TutorialApp() {
   const { close } = useWamClose()
 
   return (
@@ -24,6 +26,11 @@ function App() {
       </HeightSynchronizer>
     </WamThemeProvider>
   )
+}
+
+// The same bundle is served at /resource/wam/tutorial and /resource/wam/meeting.
+function App() {
+  return isTutorialWam() ? <TutorialApp /> : <MeetingApp />
 }
 
 export default App

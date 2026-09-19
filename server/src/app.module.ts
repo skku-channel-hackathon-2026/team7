@@ -3,12 +3,14 @@ import { APP_GUARD } from "@nestjs/core";
 import { ChannelAppModule, SignatureGuard } from "@channel.io/app-sdk-server";
 import { channelAppOptions } from "./config.js";
 import { CommandExtension, TutorialFunctions } from "./tutorial.functions.js";
+import { MeetingFunctions } from "./meeting.functions.js";
 
 @Module({
   imports: [ChannelAppModule.forRoot(channelAppOptions)],
   providers: [
     CommandExtension,
     TutorialFunctions,
+    MeetingFunctions,
     {
       provide: APP_GUARD,
       useFactory: () => new SignatureGuard(channelAppOptions),

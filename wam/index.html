@@ -23,7 +23,9 @@
       src="/src/main.tsx"
     ></script>
     <script>
-      var appearance = ChannelIOWam.getWamData('appearance')
+      var appearance = window.ChannelIOWam
+        ? ChannelIOWam.getWamData('appearance')
+        : 'light'
       if (appearance === 'dark') {
         document.body.style.backgroundColor = '#464748'
       } else {

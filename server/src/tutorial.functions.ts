@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { z } from "zod";
 import {
   CommandActionInputSchema,
+  MEETING_FUNCTIONS,
   SendAsBotInputSchema,
   TUTORIAL_FUNCTIONS,
   TUTORIAL_WAM_NAME,
@@ -37,7 +38,7 @@ const botMessage = "This is a test message sent by a bot.";
 @Extension({ name: "command", systemVersion: "v1" })
 export class CommandExtension {
   @Func("metadata.getCommands")
-  @Description("Return the tutorial command definition")
+  @Description("Return the tutorial and meeting command definitions")
   @InputSchema(z.object({}))
   @OutputSchema(GetCommandsOutputSchema)
   getCommands(): z.infer<typeof GetCommandsOutputSchema> {
@@ -48,6 +49,15 @@ export class CommandExtension {
           scope: "desk",
           description: "Open the Channel App SDK tutorial WAM",
           actionFunctionName: TUTORIAL_FUNCTIONS.open,
+          alfMode: "disable",
+          enabledByDefault: true,
+        },
+        {
+          name: "meeting",
+          scope: "desk",
+          description:
+            "과메기: 대학생 블라인드 미팅 (모집·채팅방·미팅 진행·애프터)",
+          actionFunctionName: MEETING_FUNCTIONS.open,
           alfMode: "disable",
           enabledByDefault: true,
         },

@@ -74,7 +74,7 @@ try {
   ]);
   for (const result of coldResults) {
     assert.equal(result.status, 200);
-    assert.match(await result.text(), /tutorial\.open/);
+    assert.match(await result.text(), /meeting\.open/);
   }
   for (const path of ["/functions", "/functions/v1"]) {
     assert.equal((await send(path)).status, 401);
@@ -85,13 +85,13 @@ try {
     ]);
     for (const result of results) {
       assert.equal(result.status, 200);
-      assert.match(await result.text(), /tutorial\.open/);
+      assert.match(await result.text(), /meeting\.open/);
     }
     assert.equal((await send(path, signature, body + " ")).status, 401);
   }
   assert.equal(externalCalls, 0);
   const html = await readFile(
-    ".vercel/output/static/resource/wam/tutorial/index.html",
+    ".vercel/output/static/resource/wam/meeting/index.html",
     "utf8",
   );
   assert.match(html, /assets\//);

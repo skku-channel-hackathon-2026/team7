@@ -19,6 +19,7 @@
 기존 `docs/desk-qa.md`는 team1 파일럿 기록입니다.
 
 [개발·DB 마이그레이션 안내](HACKATHON.ko.md)를 확인하세요.
+구현한 블라인드 미팅 서비스의 구조와 시연 방법은 [미팅 서비스 가이드](docs/meeting-service.md)를 참고하세요.
 DB 스키마 변경은 `cloudflare/migrations/`의 SQL로 관리하며 원격 적용은 운영자가 수행합니다.
 팀장에게 이 레포 Admin·해당 앱 owner 초대를 발송했습니다. 각 초대를 수락한 뒤 개발하세요.
 앱 초대 확인: [개발자 앱 목록](https://channel.works/-/developers/apps).

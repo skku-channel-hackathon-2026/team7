@@ -31,10 +31,10 @@ await writeFile(
     2,
   ),
 );
-await mkdir(resolve(output, "static/resource/wam/tutorial"), {
+await mkdir(resolve(output, "static/resource/wam/meeting"), {
   recursive: true,
 });
-await cp("wam/dist", resolve(output, "static/resource/wam/tutorial"), {
+await cp("wam/dist", resolve(output, "static/resource/wam/meeting"), {
   recursive: true,
 });
 await writeFile(
@@ -44,13 +44,13 @@ await writeFile(
       version: 3,
       routes: [
         {
-          src: "^/resource/wam/tutorial$",
+          src: "^/resource/wam/meeting$",
           status: 308,
-          headers: { Location: "/resource/wam/tutorial/" },
+          headers: { Location: "/resource/wam/meeting/" },
         },
         {
-          src: "^/resource/wam/tutorial/$",
-          dest: "/resource/wam/tutorial/index.html",
+          src: "^/resource/wam/meeting/$",
+          dest: "/resource/wam/meeting/index.html",
         },
         { handle: "filesystem" },
         { src: "^/functions(?:/.*)?$", dest: "/server" },

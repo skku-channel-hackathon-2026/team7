@@ -9,7 +9,7 @@ async function bootstrap() {
   app.enableShutdownHooks();
   const wamDist = resolve(process.cwd(), "../wam/dist");
   if (existsSync(wamDist)) {
-    app.useStaticAssets(wamDist, { prefix: "/resource/wam/tutorial" });
+    app.useStaticAssets(wamDist, { prefix: "/resource/wam/meeting" });
   } else {
     new Logger("Bootstrap").warn(
       `WAM build not found at ${wamDist}. Run pnpm build from the repository root.`,

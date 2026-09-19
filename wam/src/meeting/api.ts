@@ -113,7 +113,7 @@ export function useShareToGroup() {
   const share = useCallback(
     async (plainText: string) => {
       if (!available)
-        throw new Error('그룹 채팅에서 /meeting 을 실행해야 공유할 수 있어요.')
+        throw new Error('그룹 채팅에서 /tutorial 을 실행해야 공유할 수 있어요.')
       await call({
         channelId: wam.channelId,
         groupId: wam.chatId,

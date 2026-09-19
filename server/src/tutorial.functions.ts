@@ -8,7 +8,6 @@ import {
   TUTORIAL_WAM_NAME,
   type CommandActionInput,
   type SendAsBotInput,
-  type TutorialWamArgs,
 } from "@tutorial/shared";
 import {
   CommandResultSchema,
@@ -26,13 +25,10 @@ import {
   TokenManager,
   type Context,
 } from "@channel.io/app-sdk-server";
-import { appId, appSecret } from "./config.js";
-import {
-  createTutorialTargetToken,
-  readTutorialTargetToken,
-} from "./target-token.js";
+import { appSecret } from "./config.js";
+import { openMeetingWam } from "./meeting.functions.js";
+import { readTutorialTargetToken } from "./target-token.js";
 
-const tutorialMessage = "This is a test message sent by a manager.";
 const botMessage = "This is a test message sent by a bot.";
 
 @Extension({ name: "command", systemVersion: "v1" })
@@ -73,52 +69,17 @@ export class TutorialFunctions {
     private readonly nativeClient: NativeFunctionClient,
   ) {}
 
+  // `/tutorial` is the command already registered in Desk, so it opens the
+  // meeting app directly; no extension re-registration is needed.
   @Func(TUTORIAL_FUNCTIONS.open)
-  @Description("Open the tutorial WAM")
+  @Description("Open the blind meeting WAM")
   @InputSchema(CommandActionInputSchema)
   @OutputSchema(CommandResultSchema)
   open(
     @Ctx() ctx: Context,
     @Input() params: CommandActionInput,
   ): z.infer<typeof CommandResultSchema> {
-    const chat = params.chat;
-    const managerId = ctx.caller.id ?? "";
-    const triggerAttributes = params.trigger?.attributes ?? {};
-    const targetToken =
-      chat?.type === "group" &&
-      chat.id &&
-      ctx.caller.type === "manager" &&
-      managerId
-        ? createTutorialTargetToken(
-            {
-              channelId: ctx.channel.id,
-              groupId: chat.id,
-              managerId,
-              expiresAt: Date.now() + 5 * 60 * 1000,
-            },
-            appSecret,
-          )
-        : undefined;
-
-    const wamArgs = {
-      chatId: chat?.id ?? "",
-      chatType: chat?.type ?? "",
-      chatTitle: triggerAttributes.chatTitle ?? "",
-      rootMessageId: triggerAttributes.rootMessageId,
-      broadcast: triggerAttributes.broadcast === "true",
-      managerId,
-      message: tutorialMessage,
-      targetToken,
-    } satisfies TutorialWamArgs;
-
-    return {
-      type: "wam",
-      attributes: {
-        appId,
-        name: TUTORIAL_WAM_NAME,
-        wamArgs,
-      },
-    };
+    return openMeetingWam(ctx, params, TUTORIAL_WAM_NAME);
   }
 
   @Func(TUTORIAL_FUNCTIONS.sendAsBot)

@@ -311,7 +311,7 @@ export default function Detail({
         meeting.status === 'recruiting' &&
         !shareToGroup.available && (
           <p className="muted small center">
-            그룹 채팅에서 /meeting 을 실행하면 모집글을 공유할 수 있어요.
+            그룹 채팅에서 /tutorial 을 실행하면 모집글을 공유할 수 있어요.
           </p>
         )}
     </div>

@@ -71,6 +71,7 @@ import {
 import { z } from "zod";
 import { appId, appSecret } from "./config.js";
 import { getDatabase } from "./database.js";
+import { ensureMeetingSchema } from "./meeting.schema.js";
 import {
   AVAILABILITY_HOURS,
   LIVE,
@@ -201,6 +202,52 @@ const CARD_SELECT = `
     EXISTS (SELECT 1 FROM meeting_applications a WHERE a.meeting_id = m.id AND a.applicant_id = ?1 AND a.status = 'pending') AS applied
   FROM meetings m`;
 
+/**
+ * Command result that opens the meeting WAM. `/tutorial` (already registered in
+ * Desk) and `/meeting` both use it, so the app works without re-registration.
+ */
+export function openMeetingWam(
+  ctx: Context,
+  params: CommandActionInput,
+  wamName: string,
+): z.infer<typeof CommandResultSchema> {
+  const chat = params.chat;
+  const managerId = ctx.caller.id ?? "";
+  const attributes = params.trigger?.attributes ?? {};
+  // The same short-lived signed target as the tutorial: it proves which group
+  // the command ran in so the bot can later announce meeting events there.
+  const targetToken =
+    chat?.type === "group" &&
+    chat.id &&
+    ctx.caller.type === "manager" &&
+    managerId
+      ? createTutorialTargetToken(
+          {
+            channelId: ctx.channel.id,
+            groupId: chat.id,
+            managerId,
+            expiresAt: Date.now() + 30 * 60 * 1000,
+          },
+          appSecret,
+        )
+      : undefined;
+
+  const wamArgs = {
+    chatId: chat?.id ?? "",
+    chatType: chat?.type ?? "",
+    chatTitle: attributes.chatTitle ?? "",
+    managerId,
+    rootMessageId: attributes.rootMessageId,
+    broadcast: attributes.broadcast === "true",
+    targetToken,
+  } satisfies MeetingWamArgs;
+
+  return {
+    type: "wam",
+    attributes: { appId, name: wamName, wamArgs },
+  };
+}
+
 function fail(
   message: string,
   code: FunctionCallErrorCode = FunctionCallErrorCode.BadRequest,
@@ -208,23 +255,33 @@ function fail(
   throw new FunctionCallError(message, code, { type: "meeting" });
 }
 
+async function db() {
+  const database = getDatabase();
+  await ensureMeetingSchema(database);
+  return database;
+}
+
 async function all<T>(sql: string, ...binds: Bind[]): Promise<T[]> {
-  const { results } = await getDatabase()
+  const { results } = await (
+    await db()
+  )
     .prepare(sql)
     .bind(...binds)
     .all<T>();
   return results ?? [];
 }
 
-function first<T>(sql: string, ...binds: Bind[]): Promise<T | null> {
-  return getDatabase()
+async function first<T>(sql: string, ...binds: Bind[]): Promise<T | null> {
+  return (await db())
     .prepare(sql)
     .bind(...binds)
     .first<T>();
 }
 
 async function run(sql: string, ...binds: Bind[]): Promise<number> {
-  const result = (await getDatabase()
+  const result = (await (
+    await db()
+  )
     .prepare(sql)
     .bind(...binds)
     .run()) as { meta?: { changes?: number } } | undefined;
@@ -468,41 +525,7 @@ export class MeetingFunctions {
     @Ctx() ctx: Context,
     @Input() params: CommandActionInput,
   ): z.infer<typeof CommandResultSchema> {
-    const chat = params.chat;
-    const managerId = ctx.caller.id ?? "";
-    const attributes = params.trigger?.attributes ?? {};
-    // The same short-lived signed target as the tutorial: it proves which group
-    // the command ran in so the bot can later announce meeting events there.
-    const targetToken =
-      chat?.type === "group" &&
-      chat.id &&
-      ctx.caller.type === "manager" &&
-      managerId
-        ? createTutorialTargetToken(
-            {
-              channelId: ctx.channel.id,
-              groupId: chat.id,
-              managerId,
-              expiresAt: Date.now() + 30 * 60 * 1000,
-            },
-            appSecret,
-          )
-        : undefined;
-
-    const wamArgs = {
-      chatId: chat?.id ?? "",
-      chatType: chat?.type ?? "",
-      chatTitle: attributes.chatTitle ?? "",
-      managerId,
-      rootMessageId: attributes.rootMessageId,
-      broadcast: attributes.broadcast === "true",
-      targetToken,
-    } satisfies MeetingWamArgs;
-
-    return {
-      type: "wam",
-      attributes: { appId, name: MEETING_WAM_NAME, wamArgs },
-    };
+    return openMeetingWam(ctx, params, MEETING_WAM_NAME);
   }
 
   // ----- Blind profile -----
@@ -672,8 +695,8 @@ export class MeetingFunctions {
       channelId,
       groupId,
       input.kind === "proposal"
-        ? `${who} → ${input.targetDepartment}에 미팅 제안이 도착했어요! /meeting 에서 확인하세요.`
-        : `${who} 미팅 모집! /meeting 에서 신청할 수 있어요.`,
+        ? `${who} → ${input.targetDepartment}에 미팅 제안이 도착했어요! /tutorial 에서 확인하세요.`
+        : `${who} 미팅 모집! /tutorial 에서 신청할 수 있어요.`,
     );
     return { meetingId: id, announced };
   }
@@ -983,7 +1006,7 @@ export class MeetingFunctions {
     );
     const groupId = this.groupFromToken(ctx, managerId, input.targetToken);
     if (!groupId)
-      fail("채팅방 정보가 만료됐어요. /meeting 을 다시 실행해 주세요.");
+      fail("채팅방 정보가 만료됐어요. /tutorial 을 다시 실행해 주세요.");
     await run(
       "UPDATE meetings SET notify_group_id = ?, updated_at = ? WHERE id = ?",
       groupId,

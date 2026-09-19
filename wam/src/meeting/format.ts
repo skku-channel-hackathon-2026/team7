@@ -70,6 +70,6 @@ export function shareText(card: MeetingCard): string {
     card.kind === 'proposal'
       ? `→ ${card.targetDepartment}에 미팅 제안`
       : `${genderLabel(card.targetGender)} 팀 찾는 중`,
-    '/meeting 에서 신청해 주세요!',
+    '/tutorial 에서 신청해 주세요!',
   ].join('\n')
 }

@@ -72,17 +72,16 @@ export default function Rank() {
 
   return (
     <div className="page">
-      {data.sample ? (
+      {data.sampleReviews > 0 && (
         <div className="rank-sample">
-          <b>테스트 데이터</b> 실제 순위가 아니에요. 미팅 후기가 쌓이면 실제
-          랭킹으로 바뀌어요.
+          <b>테스트 데이터</b> 테스트 후기 {data.sampleReviews}개가 포함된
+          랭킹이에요. 실제 순위가 아니에요.
         </div>
-      ) : (
-        <p className="muted small">
-          미팅 후기의 &lsquo;상대 팀은 어땠나요?&rsquo; 별점을 학과별로 평균
-          냈어요. (후기 {data.totalReviews}개)
-        </p>
       )}
+      <p className="muted small">
+        미팅 후기의 &lsquo;상대 팀은 어땠나요?&rsquo; 별점을 학교·학과별로 평균
+        냈어요. (실제 후기 {data.totalReviews}개)
+      </p>
       {!data.entries.length && (
         <Empty icon={<TrophyIcon />}>아직 랭킹이 없어요.</Empty>
       )}

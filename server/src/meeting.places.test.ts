@@ -1,10 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { REGION_SPOTS } from "@tutorial/shared";
 import {
+  isMeetingPlaceName,
   naverMapLink,
   pickPlaces,
   type OverpassElement,
 } from "./meeting.places.js";
+import { PLACE_SNAPSHOT } from "./meeting.places.snapshot.js";
 
 const center = { lat: 37.5822, lng: 127.0018 };
 const place = (
@@ -58,4 +61,22 @@ test("Naver links do not repeat the area already in the name", () => {
     naverMapLink("혜화", "스타벅스 혜화역점"),
     `https://map.naver.com/p/search/${encodeURIComponent("스타벅스 혜화역점")}`,
   );
+});
+
+test("every selectable area has real places bundled with Naver links", () => {
+  for (const spot of REGION_SPOTS) {
+    const places = PLACE_SNAPSHOT[spot.name];
+    assert.ok(places && places.length >= 5, spot.name);
+    for (const place of places) {
+      assert.ok(isMeetingPlaceName(place.name), place.name);
+      assert.ok(place.link?.startsWith("https://map.naver.com/p/search/"));
+    }
+  }
+});
+
+test("karaoke, gaming and broken map names are not suggested", () => {
+  assert.equal(isMeetingPlaceName("edge coin garaoke"), false);
+  assert.equal(isMeetingPlaceName("티엑스홀덤"), false);
+  assert.equal(isMeetingPlaceName("고에몬 (달인,, unbong eden"), false);
+  assert.equal(isMeetingPlaceName("학림다방"), true);
 });

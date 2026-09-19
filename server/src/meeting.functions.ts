@@ -74,6 +74,7 @@ import { z } from "zod";
 import { appId, appSecret } from "./config.js";
 import { getDatabase } from "./database.js";
 import { fetchRegionPlaces } from "./meeting.places.js";
+import { PLACE_SNAPSHOT } from "./meeting.places.snapshot.js";
 import { ensureMeetingSchema } from "./meeting.schema.js";
 import {
   AVAILABILITY_HOURS,
@@ -99,34 +100,34 @@ import {
 
 const GROUP_NOTIFICATIONS = false;
 
-// Test data for the rank screen: real schools and departments, made-up
-// scores. Shown only while the channel has no reviews, labelled as a sample.
-const SAMPLE_RANK: RankEntry[] = [
-  { department: "경영학과", schools: ["연세대"], rating: 4.9, reviews: 42 },
-  { department: "미디어학부", schools: ["고려대"], rating: 4.8, reviews: 37 },
-  {
-    department: "글로벌경영학과",
-    schools: ["성균관대"],
-    rating: 4.7,
-    reviews: 33,
-  },
-  { department: "경제학부", schools: ["서울대"], rating: 4.6, reviews: 29 },
-  { department: "연극영화학과", schools: ["한양대"], rating: 4.5, reviews: 26 },
-  {
-    department: "영어영문학부",
-    schools: ["이화여대"],
-    rating: 4.4,
-    reviews: 24,
-  },
-  { department: "광고홍보학과", schools: ["중앙대"], rating: 4.3, reviews: 21 },
-  { department: "호텔경영학과", schools: ["경희대"], rating: 4.2, reviews: 18 },
-  { department: "경영학부", schools: ["서강대"], rating: 4.1, reviews: 15 },
-  {
-    department: "영어통번역학부",
-    schools: ["한국외대"],
-    rating: 4.0,
-    reviews: 12,
-  },
+// Test reviews for the rank screen: real schools and departments, made-up
+// "how was the other team?" scores. They are counted together with the
+// channel's real reviews and the screen labels the ranking as test data.
+const SAMPLE_REVIEWS: {
+  school: string;
+  department: string;
+  partner: number;
+}[] = [
+  { school: "연세대", department: "경영학과", partner: 5 },
+  { school: "연세대", department: "경영학과", partner: 5 },
+  { school: "연세대", department: "경영학과", partner: 4 },
+  { school: "고려대", department: "미디어학부", partner: 5 },
+  { school: "고려대", department: "미디어학부", partner: 4 },
+  { school: "성균관대", department: "글로벌경영학과", partner: 5 },
+  { school: "성균관대", department: "글로벌경영학과", partner: 5 },
+  { school: "서울대", department: "경제학부", partner: 4 },
+  { school: "서울대", department: "경제학부", partner: 5 },
+  { school: "한양대", department: "연극영화학과", partner: 5 },
+  { school: "이화여대", department: "영어영문학부", partner: 4 },
+  { school: "이화여대", department: "영어영문학부", partner: 4 },
+  { school: "중앙대", department: "광고홍보학과", partner: 4 },
+  { school: "중앙대", department: "광고홍보학과", partner: 5 },
+  { school: "경희대", department: "호텔경영학과", partner: 4 },
+  { school: "서강대", department: "경영학부", partner: 3 },
+  { school: "서강대", department: "경영학부", partner: 4 },
+  { school: "한국외대", department: "영어통번역학부", partner: 4 },
+  { school: "건국대", department: "수의예과", partner: 3 },
+  { school: "홍익대", department: "시각디자인과", partner: 5 },
 ];
 
 const PLACE_CACHE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -428,9 +429,11 @@ export class MeetingFunctions {
   }
 
   /**
-   * Real places around the chosen area, cached in D1 for a week. A failed
-   * lookup is remembered briefly so the polled room view does not retry
-   * the external API on every refresh.
+   * Real places around the chosen area. A recent live lookup (cached in D1
+   * for a week) wins, then the bundled OpenStreetMap snapshot of every
+   * selectable area, so the room never waits on the public API for those.
+   * Other areas are looked up live; a failure is remembered briefly so the
+   * polled room view does not retry the external API on every refresh.
    */
   private async placesFor(region: string): Promise<Suggestion[]> {
     const now = Date.now();
@@ -440,13 +443,17 @@ export class MeetingFunctions {
     );
     if (cached && now - Number(cached.fetched_at) < PLACE_CACHE_MS)
       return JSON.parse(cached.places_json) as Suggestion[];
+    const fallback = cached
+      ? (JSON.parse(cached.places_json) as Suggestion[])
+      : (PLACE_SNAPSHOT[region] ?? []);
+    if (PLACE_SNAPSHOT[region]) return fallback;
     if ((placeLookupFailedAt.get(region) ?? 0) > now - PLACE_RETRY_MS)
-      return cached ? (JSON.parse(cached.places_json) as Suggestion[]) : [];
+      return fallback;
 
     const places = await fetchRegionPlaces(region);
     if (!places) {
       placeLookupFailedAt.set(region, now);
-      return cached ? (JSON.parse(cached.places_json) as Suggestion[]) : [];
+      return fallback;
     }
     await run(
       `INSERT INTO meeting_place_cache (region, places_json, fetched_at) VALUES (?, ?, ?)
@@ -2304,36 +2311,39 @@ export class MeetingFunctions {
        WHERE m.channel_id = ? AND r.partner IS NOT NULL`,
       channelId,
     );
+    // One entry per school + department, so the same department name at
+    // different schools is ranked separately.
     const stats = new Map<
       string,
-      { sum: number; count: number; schools: Set<string> }
+      { department: string; school: string; sum: number; count: number }
     >();
-    for (const row of rows) {
+    for (const row of [...rows, ...SAMPLE_REVIEWS]) {
       if (!row.department) continue;
-      const stat = stats.get(row.department) ?? {
+      const school = row.school ?? "";
+      const key = `${school}\u0000${row.department}`;
+      const stat = stats.get(key) ?? {
+        department: row.department,
+        school,
         sum: 0,
         count: 0,
-        schools: new Set<string>(),
       };
       stat.sum += Number(row.partner);
       stat.count += 1;
-      if (row.school) stat.schools.add(row.school);
-      stats.set(row.department, stat);
+      stats.set(key, stat);
     }
-    const entries = [...stats.entries()]
-      .map(([department, stat]) => ({
-        department,
-        schools: [...stat.schools],
+    const entries: RankEntry[] = [...stats.values()]
+      .map((stat) => ({
+        department: stat.department,
+        schools: stat.school ? [stat.school] : [],
         rating: stat.sum / stat.count,
         reviews: stat.count,
       }))
-      .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews)
-      .slice(0, 10);
-    // Until the channel has reviews, show clearly labelled sample data so the
-    // rank screen can be tried out. It is never mixed with real reviews.
-    const output: RankOutput = entries.length
-      ? { entries, totalReviews: rows.length, sample: false }
-      : { entries: SAMPLE_RANK, totalReviews: 0, sample: true };
+      .sort((a, b) => b.rating - a.rating || b.reviews - a.reviews);
+    const output: RankOutput = {
+      entries,
+      totalReviews: rows.length,
+      sampleReviews: SAMPLE_REVIEWS.length,
+    };
     return { ...output };
   }
 

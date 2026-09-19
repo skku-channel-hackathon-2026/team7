@@ -3,9 +3,13 @@ import { REGION_SPOTS, type Suggestion } from "@tutorial/shared";
 // Real places around a meeting area come from OpenStreetMap through the public
 // Overpass API, which needs no key. Each place links to its Naver Map search,
 // where the Naver reviews and the Naver booking button live.
+// Main instance first, then a public mirror when it is busy.
 const OVERPASS_ENDPOINTS = [
-  "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter",
+  { url: "https://overpass-api.de/api/interpreter", timeoutMs: 8000 },
+  {
+    url: "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    timeoutMs: 12000,
+  },
 ];
 const SEARCH_RADIUS_M = 700;
 const PLACE_LIMIT = 8;
@@ -18,8 +22,14 @@ const KIND_LABEL: Record<string, string> = {
 };
 // How many of each kind to show first; the rest is filled by distance.
 const KIND_QUOTA: Record<string, number> = { 음식점: 4, 술집: 2, 카페: 2 };
-// Campus and institutional canteens are not meeting places.
-const EXCLUDED_NAME = /대학교|학생식당|구내식당|기숙사|병원/;
+// Campus canteens, karaoke and gaming venues are not meeting places, and very
+// long or comma-laden names are usually broken map entries.
+const EXCLUDED_NAME =
+  /대학교|학생식당|구내식당|기숙사|병원|홀덤|노래|코인|karaoke|garaoke|,,/i;
+
+export function isMeetingPlaceName(name: string): boolean {
+  return name.length <= 30 && !EXCLUDED_NAME.test(name);
+}
 
 export interface OverpassElement {
   lat?: number;
@@ -66,7 +76,7 @@ export function pickPlaces(
       const lat = element.lat ?? element.center?.lat;
       const lng = element.lon ?? element.center?.lon;
       if (!name || !kind || lat === undefined || lng === undefined) return null;
-      if (EXCLUDED_NAME.test(name) || seen.has(name)) return null;
+      if (!isMeetingPlaceName(name) || seen.has(name)) return null;
       seen.add(name);
       return {
         name,
@@ -107,6 +117,8 @@ export function pickPlaces(
     }));
 }
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 /** Fetches real places around a known meeting area; null when unavailable. */
 export async function fetchRegionPlaces(
   region: string,
@@ -114,23 +126,30 @@ export async function fetchRegionPlaces(
   const spot = regionSpot(region);
   if (!spot) return null;
   const query = `[out:json][timeout:10];nwr(around:${SEARCH_RADIUS_M},${spot.lat},${spot.lng})[name][amenity~"^(restaurant|cafe|bar|pub)$"];out center tags 120;`;
-  for (const endpoint of OVERPASS_ENDPOINTS) {
+  // The main instance is briefly busy now and then, so it gets one retry.
+  const attempts = [
+    OVERPASS_ENDPOINTS[0],
+    OVERPASS_ENDPOINTS[0],
+    ...OVERPASS_ENDPOINTS.slice(1),
+  ];
+  for (const [index, endpoint] of attempts.entries()) {
+    if (index === 1) await sleep(1000);
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(endpoint.url, {
         method: "POST",
         headers: {
           "content-type": "application/x-www-form-urlencoded",
           "user-agent": "gwamegi-meeting-app/1.0 (Channel App)",
         },
         body: new URLSearchParams({ data: query }).toString(),
-        signal: AbortSignal.timeout(8000),
+        signal: AbortSignal.timeout(endpoint.timeoutMs),
       });
       if (!response.ok) continue;
       const json = (await response.json()) as { elements?: OverpassElement[] };
       const places = pickPlaces(region, spot, json.elements ?? []);
       if (places.length) return places;
     } catch {
-      // Try the next mirror.
+      // Try again or move on to the mirror.
     }
   }
   return null;

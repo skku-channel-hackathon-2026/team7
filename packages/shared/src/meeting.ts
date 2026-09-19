@@ -502,9 +502,10 @@ export interface RankEntry {
 
 export interface RankOutput {
   entries: RankEntry[];
+  /** Real reviews from this channel. */
   totalReviews: number;
-  /** True when there are no reviews yet and `entries` is sample data. */
-  sample: boolean;
+  /** Labelled test reviews counted into `entries` (0 when none). */
+  sampleReviews: number;
 }
 
 export interface PrivateChatOutput {

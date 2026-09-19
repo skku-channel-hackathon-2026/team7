@@ -54,10 +54,11 @@ const people = {
 for (const [id, value] of Object.entries(people))
   await call(id, "meeting.saveProfile", value);
 
-// Before any review the rank screen shows 10 labelled sample entries.
+// Before any real review the rank is built from 20 labelled test reviews.
 const sampleRank = await call("g1", "meeting.rank", {});
-assert.equal(sampleRank.sample, true);
-assert.equal(sampleRank.entries.length, 10);
+assert.equal(sampleRank.sampleReviews, 20);
+assert.equal(sampleRank.totalReviews, 0);
+assert.ok(sampleRank.entries.length >= 10);
 
 // Posts carry only school, department, gender and size.
 const { meetingId } = await call("h1", "meeting.create", {
@@ -282,13 +283,19 @@ await call("h1", "meeting.submitReview", { ...review, partner: 5 });
 await call("h2", "meeting.submitReview", { ...review, partner: 4 });
 await call("g1", "meeting.submitReview", { ...review, partner: 3 });
 const rank = await call("g2", "meeting.rank", {});
-assert.equal(rank.sample, false);
-const business = rank.entries.find((e) => e.department === "경영학과");
+assert.equal(rank.totalReviews, 3);
+// Real reviews are ranked per school + department next to the test reviews.
+const business = rank.entries.find(
+  (e) => e.department === "경영학과" && e.schools[0] === "이화여대",
+);
 assert.equal(business.rating, 4.5);
 assert.equal(business.reviews, 2);
 assert.deepEqual(business.schools, ["이화여대"]);
 assert.equal(
-  rank.entries.find((e) => e.department === "컴퓨터공학과").rating,
+  rank.entries.find(
+    (e) =>
+      e.department === "컴퓨터공학과" && e.schools[0] === "성균관대 자과캠",
+  ).rating,
   3,
 );
 

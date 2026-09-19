@@ -206,7 +206,7 @@ export default function PlanPanel({
             {!locked && !!data.placeSuggestions.length && (
               <p className="muted small">
                 {meeting.region} 주변 실제 장소예요. 리뷰와 예약은 네이버
-                지도에서 확인하세요.
+                지도에서 확인하세요. (장소 데이터 © OpenStreetMap 기여자)
               </p>
             )}
             {!locked &&

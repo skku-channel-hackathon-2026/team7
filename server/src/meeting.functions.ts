@@ -95,6 +95,8 @@ import {
   readTutorialTargetToken,
 } from "./target-token.js";
 
+const GROUP_NOTIFICATIONS = false;
+
 type Json = Record<string, unknown>;
 type Bind = string | number | null;
 type Side = "host" | "guest";
@@ -365,7 +367,9 @@ export class MeetingFunctions {
     groupId: string | null,
     text: string,
   ): Promise<boolean> {
-    if (!groupId) return false;
+    // The "과메기 MC" bot stays quiet in Channel team chats; the in-app room
+    // keeps the full record. Flip GROUP_NOTIFICATIONS to turn it back on.
+    if (!GROUP_NOTIFICATIONS || !groupId) return false;
     try {
       const token = await withTimeout(
         this.tokenManager.getChannelToken({ channelId }),

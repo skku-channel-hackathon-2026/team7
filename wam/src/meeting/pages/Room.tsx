@@ -7,7 +7,7 @@ import {
   type BezierIcon,
 } from '@channel.io/bezier-icons'
 import { MEETING_FUNCTIONS, type RoomOutput } from '@tutorial/shared'
-import { errorText, useFn, useMeetingWamData } from '../api'
+import { errorText, useFn } from '../api'
 import { clock, planLabel, shortDept } from '../format'
 import type { Nav } from '../nav'
 import { Banner, Button, StatusBadge } from '../ui'
@@ -24,12 +24,9 @@ export default function Room({
   nav: Nav
   meetingId: string
 }) {
-  const wam = useMeetingWamData()
   const room = useFn<RoomOutput>(MEETING_FUNCTIONS.room)
-  const linkGroup = useFn<{ sent: boolean }>(MEETING_FUNCTIONS.linkGroup)
   const [data, setData] = useState<RoomOutput | null>(null)
   const [error, setError] = useState('')
-  const [notice, setNotice] = useState('')
   const [tab, setTab] = useState<Tab | null>(null)
   const roomCall = room.call
   const inFlight = useRef(false)
@@ -76,23 +73,6 @@ export default function Room({
   const activeTab: Tab = tab ?? (status === 'finished' ? 'meeting' : 'chat')
   const other = data.meeting.guestDepartment ?? '상대 학과'
 
-  const doLink = async () => {
-    try {
-      const result = await linkGroup.call({
-        meetingId,
-        targetToken: wam.targetToken,
-      })
-      setNotice(
-        result.sent
-          ? '알림방을 연결했어요.'
-          : '알림방을 연결했어요. (봇 메시지는 공개 그룹에서만 전송돼요)'
-      )
-      await reload()
-    } catch (err) {
-      setError(errorText(err))
-    }
-  }
-
   return (
     <div className="room">
       <div className="room-head">
@@ -119,20 +99,7 @@ export default function Room({
         </div>
       </div>
 
-      {!data.linkedGroup && wam.targetToken && (
-        <div className="link-group">
-          <span>채널톡 그룹에도 알림 받기</span>
-          <Button
-            small
-            onClick={() => void doLink()}
-            disabled={linkGroup.loading}
-          >
-            연결
-          </Button>
-        </div>
-      )}
       {error && <Banner tone="error">{error}</Banner>}
-      {notice && <Banner tone="success">{notice}</Banner>}
 
       <div className="tabs">
         {(
